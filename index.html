@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2025 수시 입시결과 검색기</title>
+    <title>2025 수시 입시결과 검색기 (2028 5등급제 환산 지원)</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; margin: 20px; background-color: #f9f9f9; }
         h1 { color: #333; text-align: center; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 5px; font-size: 14px; }
         
-        /* 💡 추가된 면책 조항(주의 문구) 디자인 */
         .disclaimer { text-align: center; color: #e74c3c; margin-bottom: 25px; font-size: 13px; font-weight: bold; }
         
         /* 다중 검색창 및 성적 입력창 디자인 */
@@ -20,27 +19,16 @@
             gap: 10px; 
             margin-bottom: 20px; 
             flex-wrap: wrap;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        input[type="text"], input[type="number"] { 
-            width: 180px; 
-            padding: 12px 15px; 
-            font-size: 16px; 
-            border: 2px solid #4CAF50; 
-            border-radius: 8px; 
-            outline: none; 
-            transition: box-shadow 0.2s;
-        }
-        input[type="text"]:focus, input[type="number"]:focus { box-shadow: inset 0 0 5px rgba(76, 175, 80, 0.3); }
+        input[type="text"] { width: 160px; padding: 12px 15px; font-size: 15px; border: 2px solid #4CAF50; border-radius: 8px; outline: none; transition: box-shadow 0.2s; }
+        input[type="number"] { width: 140px; padding: 12px 15px; font-size: 14px; border: 2px solid #3498db; border-radius: 8px; outline: none; background-color: #f0f8ff; }
+        input[type="text"]:focus, input[type="number"]:focus { box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); }
+        
         button { 
-            padding: 12px 30px; 
-            font-size: 16px; 
-            border: 2px solid #4CAF50; 
-            background-color: #4CAF50; 
-            color: white; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold;
-            transition: background 0.2s; 
+            padding: 12px 30px; font-size: 16px; border: 2px solid #4CAF50; background-color: #4CAF50; color: white; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; 
         }
         button:hover { background-color: #45a049; }
         
@@ -49,7 +37,7 @@
         
         .table-wrapper { overflow-x: auto; max-height: 650px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; background: #fff; text-align: left; }
-        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #ddd; font-size: 14px; white-space: nowrap; vertical-align: middle; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #ddd; font-size: 14px; white-space: nowrap; vertical-align: middle; }
         th { background-color: #4CAF50; color: white; position: sticky; top: 0; z-index: 10; font-weight: bold; }
         tr:nth-child(even) { background-color: #f8f9fa; }
         tr:hover { background-color: #f1f3f5; }
@@ -65,11 +53,12 @@
         td:nth-child(10) { font-weight: bold; }
         
         .badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; color: white; display: inline-block; min-width: 65px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-top: 3px; }
-        .overreach { background-color: #e74c3c; } /* 빨간색 (과도상향) */
-        .reach { background-color: #e67e22; }     /* 주황색 (상향) */
-        .match { background-color: #2ecc71; }     /* 초록색 (적정) */
-        .safety { background-color: #3498db; }    /* 파란색 (안정/하향) */
-        .diff-text { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+        .overreach { background-color: #e74c3c; } 
+        .reach { background-color: #e67e22; }     
+        .match { background-color: #2ecc71; }     
+        .safety { background-color: #3498db; }    
+        .diff-text { font-size: 12px; color: #666; display: block; margin-bottom: 2px; }
+        .convert-text { font-size: 11px; color: #3498db; display: block; margin-bottom: 4px; font-weight: normal; }
 
         .no-result { text-align: center; padding: 30px; color: #999; font-size: 16px; }
         .initial-msg { text-align: center; padding: 50px; color: #666; font-size: 16px; background-color: #fff !important; }
@@ -78,13 +67,14 @@
 <body>
 
     <h1>2025 학년도 수시 입시결과 조회</h1>
-    <div class="subtitle">대교협 발표자료 기반 (내 성적 입력 시 70% 컷과의 차이가 계산됩니다)</div>
-    <div class="disclaimer">※ 주의: 본 판정 결과는 과거 자료를 바탕으로 계산된 참고용 수치일 뿐, 실제 합격 여부를 보장하는 절대적인 기준이 아닙니다.</div>
+    <div class="subtitle">대교협 발표자료 기반 (1학년 5등급제 내신 자동 환산 지원)</div>
+    <div class="disclaimer">※ 주의: 본 판정 및 환산 결과는 과거 자료를 바탕으로 계산된 참고용 수치일 뿐, 실제 합격 여부를 보장하지 않습니다.</div>
     
     <div class="search-container">
         <input type="text" id="univInput" placeholder="대학명 (예: 고려대)">
         <input type="text" id="majorInput" placeholder="학과명 (예: 컴퓨터)">
-        <input type="number" id="myGradeInput" placeholder="내 성적 (예: 2.34)" step="0.01">
+        <input type="number" id="grade9Input" placeholder="9등급제 내신" step="0.01" title="현재 고2, 고3 학생용">
+        <input type="number" id="grade5Input" placeholder="5등급제 내신(고1)" step="0.01" title="현재 고1 학생용 (입력 시 9등급으로 자동 환산됩니다)">
         <button onclick="filterTable()">검색</button>
     </div>
     
@@ -125,12 +115,37 @@
         
         let allData = [];
 
+        // 💡 5등급제 -> 9등급제 환산 데이터베이스 (선생님이 주신 표 완벽 이식)
+        const conversionTable = [
+            [1.0, 1.2], [1.01, 1.25], [1.02, 1.35], [1.14, 1.74], [1.15, 1.86], [1.17, 1.91], [1.28, 1.97], [1.3, 2.09], [1.31, 2.11], [1.34, 2.14], [1.36, 2.17], [1.37, 2.19], [1.41, 2.2], [1.42, 2.25], [1.43, 2.27], [1.46, 2.29], [1.54, 2.32], [1.58, 2.41], [1.6, 2.54], [1.65, 2.6], [1.73, 2.66], [1.76, 2.71], [1.79, 2.88], [1.81, 2.91], [1.85, 3.1], [1.86, 3.23], [1.88, 3.27], [1.91, 3.3], [1.93, 3.34], [1.96, 3.37], [1.97, 3.41], [1.98, 3.44], [1.99, 3.46], [2.03, 3.47], [2.04, 3.5], [2.05, 3.56], [2.08, 3.6], [2.1, 3.65], [2.15, 3.68], [2.18, 3.7], [2.2, 3.8], [2.25, 3.9], [2.29, 4.0], [2.35, 4.09], [2.41, 4.18], [2.45, 4.22], [2.47, 4.24], [2.48, 4.29], [2.5, 4.3], [2.52, 4.33], [2.54, 4.4], [2.58, 4.47], [2.6, 4.52], [2.66, 4.57], [2.76, 4.65], [2.77, 4.7], [2.8, 4.75], [2.9, 4.8], [2.98, 4.85], [3.0, 4.93], [3.05, 5.0], [3.06, 5.06], [3.08, 5.12], [3.28, 5.32], [3.4, 5.56], [3.49, 5.72], [3.56, 5.94], [3.6, 5.99], [3.72, 6.01], [3.95, 6.38], [4.01, 6.5], [4.21, 6.91]
+        ];
+
+        // 💡 5등급 점수를 9등급 점수로 정밀하게 환산(선형 보간)하는 함수
+        function convert5To9(grade5) {
+            if (grade5 <= conversionTable[0][0]) return conversionTable[0][1];
+            if (grade5 >= conversionTable[conversionTable.length - 1][0]) return conversionTable[conversionTable.length - 1][1];
+
+            for (let i = 0; i < conversionTable.length - 1; i++) {
+                let x1 = conversionTable[i][0], y1 = conversionTable[i][1];
+                let x2 = conversionTable[i+1][0], y2 = conversionTable[i+1][1];
+                
+                if (grade5 >= x1 && grade5 <= x2) {
+                    if (x1 === x2) return y1;
+                    // 비율 계산을 통해 표에 없는 소수점까지 정확하게 유추해냅니다.
+                    let converted = y1 + ((grade5 - x1) * (y2 - y1)) / (x2 - x1);
+                    return parseFloat(converted.toFixed(2));
+                }
+            }
+            return grade5;
+        }
+
         function handleEnter(e) {
             if (e.key === 'Enter') filterTable();
         }
         document.getElementById('univInput').addEventListener('keypress', handleEnter);
         document.getElementById('majorInput').addEventListener('keypress', handleEnter);
-        document.getElementById('myGradeInput').addEventListener('keypress', handleEnter);
+        document.getElementById('grade9Input').addEventListener('keypress', handleEnter);
+        document.getElementById('grade5Input').addEventListener('keypress', handleEnter);
 
         async function fetchSheetData() {
             try {
@@ -153,15 +168,9 @@
                     else lastUniversity = currentUniv; 
 
                     let refinedRow = [
-                        currentUniv,           // A열 (0)
-                        getVal(row, 1),        // B열 (1)
-                        getVal(row, 2),        // C열 (2)
-                        getVal(row, 3),        // D열 (3)
-                        getVal(row, 4),        // E열 (4)
-                        getVal(row, 5),        // F열 (5)
-                        getVal(row, 6),        // G열 (6)
-                        getVal(row, 7),        // H열 (7): 50% cut
-                        getVal(row, 8)         // I열 (8): 70% cut
+                        currentUniv, getVal(row, 1), getVal(row, 2), getVal(row, 3), 
+                        getVal(row, 4), getVal(row, 5), getVal(row, 6), 
+                        getVal(row, 7), getVal(row, 8)
                     ];
 
                     if (refinedRow[0] !== '-' && refinedRow[3] !== '-' && refinedRow[3] !== '모집단위') {
@@ -170,7 +179,7 @@
                 });
 
                 allData = processedData;
-                document.getElementById('loadingText').innerText = `총 ${allData.length.toLocaleString()}건의 데이터 준비 완료! 대학명/학과명/내 성적을 입력해주세요.`;
+                document.getElementById('loadingText').innerText = `총 ${allData.length.toLocaleString()}건의 데이터 준비 완료! 검색어를 입력해주세요.`;
                 document.getElementById('tableWrapper').style.display = 'block';
                 
             } catch (error) {
@@ -180,7 +189,7 @@
             }
         }
 
-        function displayData(data, myGrade) {
+        function displayData(data, effectiveGrade, originalGrade5) {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
 
@@ -205,27 +214,29 @@
                         const verdictTd = document.createElement('td');
                         let verdictHtml = '-'; 
 
-                        if (myGrade) {
+                        if (effectiveGrade !== null) {
                             const cut70 = parseFloat(rowData[8]); 
                             
                             if (!isNaN(cut70)) {
-                                const diff = myGrade - cut70; 
+                                const diff = effectiveGrade - cut70; 
                                 const diffText = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
                                 
                                 let badgeClass = '';
                                 let badgeText = '';
 
-                                if (diff >= 0.5) {
-                                    badgeClass = 'overreach'; badgeText = '과도상향';
-                                } else if (diff > 0.1) {
-                                    badgeClass = 'reach'; badgeText = '상향';
-                                } else if (diff >= -0.2) {
-                                    badgeClass = 'match'; badgeText = '적정';
-                                } else {
-                                    badgeClass = 'safety'; badgeText = '안정(하향)';
-                                }
+                                if (diff >= 0.5) { badgeClass = 'overreach'; badgeText = '과도상향'; } 
+                                else if (diff > 0.1) { badgeClass = 'reach'; badgeText = '상향'; } 
+                                else if (diff >= -0.2) { badgeClass = 'match'; badgeText = '적정'; } 
+                                else { badgeClass = 'safety'; badgeText = '안정(하향)'; }
                                 
+                                // 1학년(5등급제) 점수를 입력했을 경우 친절하게 환산 결과를 안내합니다.
+                                let convertHtml = '';
+                                if (originalGrade5 !== null) {
+                                    convertHtml = `<span class="convert-text">(5등급 ${originalGrade5} ➔ 9등급 ${effectiveGrade.toFixed(2)} 환산)</span>`;
+                                }
+
                                 verdictHtml = `
+                                    ${convertHtml}
                                     <span class="diff-text">(차이: ${diffText})</span>
                                     <span class="badge ${badgeClass}">${badgeText}</span>
                                 `;
@@ -242,8 +253,21 @@
         function filterTable() {
             const univQuery = document.getElementById('univInput').value.toLowerCase().trim();
             const majorQuery = document.getElementById('majorInput').value.toLowerCase().trim();
-            const myGradeInput = document.getElementById('myGradeInput').value;
-            const myGrade = myGradeInput ? parseFloat(myGradeInput) : null;
+            
+            // 내신 입력 처리 로직
+            const grade9Input = document.getElementById('grade9Input').value;
+            const grade5Input = document.getElementById('grade5Input').value;
+            
+            let effectiveGrade = null;
+            let originalGrade5 = null;
+
+            // 9등급제 점수가 입력되어 있으면 우선적으로 사용하고, 비어있을 경우 5등급 점수를 9등급으로 환산합니다.
+            if (grade9Input) {
+                effectiveGrade = parseFloat(grade9Input);
+            } else if (grade5Input) {
+                originalGrade5 = parseFloat(grade5Input);
+                effectiveGrade = convert5To9(originalGrade5);
+            }
             
             if (!univQuery && !majorQuery) {
                 alert("대학명이나 학과명 중 하나 이상을 입력해주세요!");
@@ -260,7 +284,7 @@
                 return univMatch && majorMatch; 
             });
 
-            displayData(filtered, myGrade);
+            displayData(filtered, effectiveGrade, originalGrade5);
             
             let searchMsg = '';
             if (univQuery && majorQuery) searchMsg = `'${univQuery}'의 '${majorQuery}'`;
