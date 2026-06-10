@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 수시 입시결과 검색기</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 20px; background-color: #f9f9f9; }
+        h1 { color: #333; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 5px; font-size: 14px; }
+        
+        /* 💡 추가된 면책 조항(주의 문구) 디자인 */
+        .disclaimer { text-align: center; color: #e74c3c; margin-bottom: 25px; font-size: 13px; font-weight: bold; }
+        
+        /* 다중 검색창 및 성적 입력창 디자인 */
+        .search-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap;
+        }
+        input[type="text"], input[type="number"] { 
+            width: 180px; 
+            padding: 12px 15px; 
+            font-size: 16px; 
+            border: 2px solid #4CAF50; 
+            border-radius: 8px; 
+            outline: none; 
+            transition: box-shadow 0.2s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus { box-shadow: inset 0 0 5px rgba(76, 175, 80, 0.3); }
+        button { 
+            padding: 12px 30px; 
+            font-size: 16px; 
+            border: 2px solid #4CAF50; 
+            background-color: #4CAF50; 
+            color: white; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background 0.2s; 
+        }
+        button:hover { background-color: #45a049; }
+        
+        .loading-wrap { text-align: center; margin-bottom: 20px; }
+        .loading { font-size: 16px; color: #4CAF50; font-weight: bold; }
+        
+        .table-wrapper { overflow-x: auto; max-height: 650px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; background: #fff; text-align: left; }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #ddd; font-size: 14px; white-space: nowrap; vertical-align: middle; }
+        th { background-color: #4CAF50; color: white; position: sticky; top: 0; z-index: 10; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #f1f3f5; }
+        
+        /* 50% 컷 및 70% 컷 색상 강조 */
+        th:nth-child(8) { background-color: #FFD966 !important; color: #333 !important; }
+        td:nth-child(8) { background-color: #FFF2CC !important; font-weight: bold; color: #d35400; }
+        th:nth-child(9) { background-color: #F4B183 !important; color: #333 !important; }
+        td:nth-child(9) { background-color: #FCE4D6 !important; font-weight: bold; color: #c0392b; }
+
+        /* 지원 판정 열 강조 및 배지 디자인 */
+        th:nth-child(10) { background-color: #2c3e50 !important; } 
+        td:nth-child(10) { font-weight: bold; }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; color: white; display: inline-block; min-width: 65px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-top: 3px; }
+        .overreach { background-color: #e74c3c; } /* 빨간색 (과도상향) */
+        .reach { background-color: #e67e22; }     /* 주황색 (상향) */
+        .match { background-color: #2ecc71; }     /* 초록색 (적정) */
+        .safety { background-color: #3498db; }    /* 파란색 (안정/하향) */
+        .diff-text { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+
+        .no-result { text-align: center; padding: 30px; color: #999; font-size: 16px; }
+        .initial-msg { text-align: center; padding: 50px; color: #666; font-size: 16px; background-color: #fff !important; }
+    </style>
+</head>
+<body>
+
+    <h1>2025 학년도 수시 입시결과 조회</h1>
+    <div class="subtitle">대교협 발표자료 기반 (내 성적 입력 시 70% 컷과의 차이가 계산됩니다)</div>
+    <div class="disclaimer">※ 주의: 본 판정 결과는 과거 자료를 바탕으로 계산된 참고용 수치일 뿐, 실제 합격 여부를 보장하는 절대적인 기준이 아닙니다.</div>
+    
+    <div class="search-container">
+        <input type="text" id="univInput" placeholder="대학명 (예: 고려대)">
+        <input type="text" id="majorInput" placeholder="학과명 (예: 컴퓨터)">
+        <input type="number" id="myGradeInput" placeholder="내 성적 (예: 2.34)" step="0.01">
+        <button onclick="filterTable()">검색</button>
+    </div>
+    
+    <div class="loading-wrap">
+        <div id="loadingText" class="loading">데이터(2만여 개)를 불러오는 중입니다. 잠시만 기다려주세요...</div>
+    </div>
+
+    <div class="table-wrapper" id="tableWrapper" style="display:none;">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>학교</th>
+                    <th>중심전형</th>
+                    <th>전형명</th>
+                    <th>모집단위(학과명)</th>
+                    <th>모집인원</th>
+                    <th>경쟁률</th>
+                    <th>충원순위</th>
+                    <th>교과 등급<br>(50% cut)</th>
+                    <th>교과 등급<br>(70% cut)</th>
+                    <th>지원 판정<br>(내신 차이)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr id="initialRow"><td colspan="10" class="initial-msg">데이터 로딩이 완료되었습니다. 대학/학과와 내 성적을 입력하고 검색을 눌러주세요.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="noData" class="no-result" style="display:none;">검색 조건에 맞는 결과가 없습니다.</div>
+
+    <script>
+        // ⚠️ 선생님의 API 키를 반드시 아래에 붙여넣어 주세요!
+        const API_KEY = 'AIzaSyBXkK8CUCBRX9PqOxghIYm3f2xGBge9f7k'; 
+        const SPREADSHEET_ID = '1-ZMGUJQKPShhYGql1BEhJDxcxF-rVrjtLhrI-t2KtPA';
+        const RANGE = '2025 수시입결!A3:L'; 
+        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(RANGE)}?key=${API_KEY}`;
+        
+        let allData = [];
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') filterTable();
+        }
+        document.getElementById('univInput').addEventListener('keypress', handleEnter);
+        document.getElementById('majorInput').addEventListener('keypress', handleEnter);
+        document.getElementById('myGradeInput').addEventListener('keypress', handleEnter);
+
+        async function fetchSheetData() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error.message);
+
+                const rows = data.values;
+                let processedData = [];
+                let lastUniversity = "-";
+
+                const getVal = (row, idx) => row[idx] ? row[idx].replace(/\n|\r/g, ' ').trim() : '-';
+
+                rows.forEach(row => {
+                    if (!row || row.length === 0) return;
+
+                    let currentUniv = getVal(row, 0);
+                    if (currentUniv === "" || currentUniv === "-") currentUniv = lastUniversity;
+                    else lastUniversity = currentUniv; 
+
+                    let refinedRow = [
+                        currentUniv,           // A열 (0)
+                        getVal(row, 1),        // B열 (1)
+                        getVal(row, 2),        // C열 (2)
+                        getVal(row, 3),        // D열 (3)
+                        getVal(row, 4),        // E열 (4)
+                        getVal(row, 5),        // F열 (5)
+                        getVal(row, 6),        // G열 (6)
+                        getVal(row, 7),        // H열 (7): 50% cut
+                        getVal(row, 8)         // I열 (8): 70% cut
+                    ];
+
+                    if (refinedRow[0] !== '-' && refinedRow[3] !== '-' && refinedRow[3] !== '모집단위') {
+                        processedData.push(refinedRow);
+                    }
+                });
+
+                allData = processedData;
+                document.getElementById('loadingText').innerText = `총 ${allData.length.toLocaleString()}건의 데이터 준비 완료! 대학명/학과명/내 성적을 입력해주세요.`;
+                document.getElementById('tableWrapper').style.display = 'block';
+                
+            } catch (error) {
+                console.error('API 로드 오류:', error);
+                document.getElementById('loadingText').innerText = `API 호출 중 오류가 발생했습니다. API 키를 확인해주세요.`;
+                document.getElementById('loadingText').style.color = 'red';
+            }
+        }
+
+        function displayData(data, myGrade) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                document.getElementById('noData').style.display = 'block';
+                document.getElementById('resultTable').style.display = 'none';
+                return;
+            } else {
+                document.getElementById('noData').style.display = 'none';
+                document.getElementById('resultTable').style.display = 'table';
+            }
+
+            data.forEach(rowData => {
+                const tr = document.createElement('tr');
+                
+                for(let i=0; i<rowData.length; i++) {
+                    const td = document.createElement('td');
+                    td.innerText = rowData[i];
+                    tr.appendChild(td);
+                    
+                    if (i === 8) {
+                        const verdictTd = document.createElement('td');
+                        let verdictHtml = '-'; 
+
+                        if (myGrade) {
+                            const cut70 = parseFloat(rowData[8]); 
+                            
+                            if (!isNaN(cut70)) {
+                                const diff = myGrade - cut70; 
+                                const diffText = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
+                                
+                                let badgeClass = '';
+                                let badgeText = '';
+
+                                if (diff >= 0.5) {
+                                    badgeClass = 'overreach'; badgeText = '과도상향';
+                                } else if (diff > 0.1) {
+                                    badgeClass = 'reach'; badgeText = '상향';
+                                } else if (diff >= -0.2) {
+                                    badgeClass = 'match'; badgeText = '적정';
+                                } else {
+                                    badgeClass = 'safety'; badgeText = '안정(하향)';
+                                }
+                                
+                                verdictHtml = `
+                                    <span class="diff-text">(차이: ${diffText})</span>
+                                    <span class="badge ${badgeClass}">${badgeText}</span>
+                                `;
+                            }
+                        }
+                        verdictTd.innerHTML = verdictHtml;
+                        tr.appendChild(verdictTd);
+                    }
+                }
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const univQuery = document.getElementById('univInput').value.toLowerCase().trim();
+            const majorQuery = document.getElementById('majorInput').value.toLowerCase().trim();
+            const myGradeInput = document.getElementById('myGradeInput').value;
+            const myGrade = myGradeInput ? parseFloat(myGradeInput) : null;
+            
+            if (!univQuery && !majorQuery) {
+                alert("대학명이나 학과명 중 하나 이상을 입력해주세요!");
+                return;
+            }
+
+            const filtered = allData.filter(row => {
+                const university = row[0] ? row[0].toLowerCase() : '';
+                const major = row[3] ? row[3].toLowerCase() : '';
+                
+                const univMatch = univQuery === '' || university.includes(univQuery);
+                const majorMatch = majorQuery === '' || major.includes(majorQuery);
+                
+                return univMatch && majorMatch; 
+            });
+
+            displayData(filtered, myGrade);
+            
+            let searchMsg = '';
+            if (univQuery && majorQuery) searchMsg = `'${univQuery}'의 '${majorQuery}'`;
+            else if (univQuery) searchMsg = `'${univQuery}'`;
+            else if (majorQuery) searchMsg = `'${majorQuery}'`;
+            
+            document.getElementById('loadingText').innerText = `${searchMsg} 검색 결과: 총 ${filtered.length.toLocaleString()}건`;
+            document.getElementById('loadingText').style.color = '#333';
+        }
+
+        window.onload = fetchSheetData;
+    </script>
+</body>
+</html>
